@@ -15,7 +15,7 @@ const getAllProducts = async(data) => {
 
 const getProduct = async(id) =>  {
     try {
-        const response = await axios.get(`${base_url}product/${id}`);
+        const response = await axios.get(`http://localhost:5000/product/${id}`);
         return response.data;
     }catch(err) {
         console.log(err);
@@ -36,12 +36,18 @@ const removeFromWishList = async(id) => {
 }
 
 const rateProduct = async (data) => {
+    //TODO:Change dynamic url
     const {comment,star,id} = data;
     try {
-        const response = await axios.post(`${base_url}/product/rating/${id}`,{comment,star},config);
+        const response = await axios.post(`http://localhost:5000/product/rating/${id}`,{comment,star}, {headers : {
+            Authorization : `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0YTQzNWUxMDY1ZTQyODExOGUzNzViMCIsImlhdCI6MTY4ODQ4NDE3OSwiZXhwIjoxNjg4NzQzMzc5fQ.kSbEEKOCVJ-Ktxs9V7R-XJvajKhZcQT-DtbWrfWXzSg`,
+            Accept : 'application/json'
+    
+        }});
     return response.data;
     }catch(err) {
         console.log(err);
+        throw new Error('rejected')
     }
 }
 

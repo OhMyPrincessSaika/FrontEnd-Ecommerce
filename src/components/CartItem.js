@@ -6,6 +6,7 @@ import { getUserCart } from '../features/user/userSlice';
 const CartItem = (props) => {
     const dispatch = useDispatch();
     const {cartItem,handleRemoveFromCart,handleTotal} = props;
+    console.log(cartItem);
     const [quantity,setQuantity] = React.useState(cartItem?.quantity);
     const handleQuantityChange = (e) =>{
       const newQuantity = e.target.value;
@@ -54,9 +55,19 @@ const CartItem = (props) => {
               
                 <p >{cartItem?.productId?.title}</p>
                 <div className='d-flex gap-3 ' >Color : <ul className="ps-0 colors">
-                        <li className="color" style={{backgroundColor:cartItem?.productId?.color[0].value}}></li>
+                       {
+                        cartItem?.color?.map((color) => {
+                            return   <li className="color" style={{backgroundColor:color}}></li>
+                        })
+                       }
                     </ul>
                 </div>
+                {
+                    [...new Set(cartItem?.size)].map((value) => {
+                        return  <span className="badge size  border border-1 bg-white text-dark">{value}</span>
+                    })
+                }
+               
             </div>
         </div>
         <div className="cart-col-2">

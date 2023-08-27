@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Marquee from "react-fast-marquee";
 import BlogCard from '../components/BlogCard';
@@ -13,12 +13,67 @@ import NoDataFound from '../components/NoDataFound';
 import BlogCardPlaceholder from '../components/BlogCardPlaceholder';
 import ProductPlaceholder from '../components/ProductPlaceholder';
 import SpecialProductPlaceholder from '../components/SpecialProductPlaceholder';
-
+import { useStateContext } from '../app/ContextProvider';
+import { getAllBanners } from '../features/banner/bannerSlice';
 const Home = () => {
+  const dispatch = useDispatch();
+  const [banners,setBanners] = React.useState([]);
+  React.useEffect(() => {
+    dispatch(getAllBanners());
+  },[])
+  const bannerSel = useSelector((state) => state.banner?.banners?.banners);
+ 
+  React.useEffect(() => {
+    if(bannerSel) {
+      setBanners(bannerSel);
+    }
+  },[bannerSel])
+  React.useEffect(() => {
+    const mainBanners = document.querySelectorAll('.main-banner');
+    const btns = document.querySelectorAll('.dot');
+    console.log(banners);
+    if(banners?.length > 0) {
+      mainBanners[0].classList.add('active');
+    btns[0].classList.add('active');
+    const handleClick = (i) => {
+      mainBanners.forEach((banner) => {
+        banner.classList.remove('active');
+      })
+      btns.forEach((btn) => {
+        btn.classList.remove('active');
+      })
+
+      mainBanners[i].classList.add('active');
+      btns[i].classList.add('active');
+    }
+    btns.forEach((btn,i) => {
+      btn.addEventListener('click' , () => {
+          handleClick(i);
+      })
+    })
+    let i = 0;
+    
+    const automaticSlide = setInterval(() => {
+      
+      const active = document.getElementsByClassName('active');
+      [...active].forEach((activeSlide) => {
+        activeSlide.classList.remove('active');
+      })
+      mainBanners[i].classList.add('active');
+      btns[i].classList.add('active');
+      i++;
+      if(i == mainBanners.length) {
+        i = 0;
+      }
+    },5000);
+    return () =>  clearInterval(automaticSlide);
+    }
+    
+  },[banners])
+  const {screenWidth} = useStateContext();
   let foundPopular=false,foundSpecial=false,foundFeatured = false;
   const [products,setProducts] = React.useState([]);
   const [blogs,setBlogs] = React.useState([]);
-  const dispatch = useDispatch();
   React.useEffect(() => {
     dispatch(getAllProducts());
     dispatch(getAllBlogs());
@@ -34,6 +89,44 @@ const Home = () => {
       setBlogs(blogSel);
     }
   },[prodSel,blogSel]);
+  const mainBannerResize = () => {
+    const mainBannerContainer = document.querySelector('.main-banner-container');
+    
+    if(mainBannerContainer) {
+      const bannerImg = mainBannerContainer.querySelector('.banner-img');
+      const smallBanner = document.querySelectorAll('.small-banner');
+      const productImage = document.querySelectorAll('.product-img');
+      if(bannerImg) {
+        let height = bannerImg.offsetHeight;
+        if(height === 0) height= 400;
+        console.log(height);
+        let smallBannerOffsetHeight = ((height-25)/2);
+       
+        console.log(smallBannerOffsetHeight)
+        productImage.forEach((img) => {
+          img.style.height = `${smallBannerOffsetHeight}px`
+          // banner.style.marginBottom =  `${margin}px`
+        })
+        smallBanner.forEach((banner) => {
+          banner.style.height = `${smallBannerOffsetHeight}px`
+        })
+        // productCat.style.height = `${height - 10}px`
+        mainBannerContainer.style.height = `${height}px`
+      }
+    }
+  }
+  // React.useEffect(() => {
+  //   mainBannerResize();
+  // },[])
+  React.useEffect(() => {
+    if(banners) {
+      mainBannerResize();
+
+      window.addEventListener('resize',mainBannerResize);
+    }
+    return () =>  window.removeEventListener('resize',mainBannerResize);
+  },[banners])
+ 
   
   return (
     <>
@@ -42,9 +135,30 @@ const Home = () => {
         <div className="container-xxl ">
           <div className="row">
             <div className="col-md-12 col-12 col-lg-6">
-            {/* <div className="d-flex jusitfy-content-center align-items-center"> */}
-                <div className="main-banner" style={{position:'relative'}}>
-                  <img className="img-fluid banner-img rounded-3" src="/images/banner-c1.jpg" alt="banner3"/>
+              <div className="main-banner-container">
+                {
+                  banners?.map((banner,i) => {
+                    const str = "c_crop,g_custom";
+                    const cropUrl = banner.url.replace(/(upload\/)/,"$&"+str+"/");
+                    return (<div key={i} className="main-banner" style={{position:'absolute'}}>
+                      <img 
+                      className=" banner-img rounded-3" 
+                      src={cropUrl}
+                      alt="banner3"/>
+                      <div className="main-banner-content position-absolute" style={{top:'10%',left:'6%'}}>
+                        <h4>{banner?.name}</h4>
+                        <h5>{banner?.sale_text}</h5>
+                        <p>{banner?.price_range}</p>
+                        <Link to={`/product/${banner?.productId}`} className="button">Buy Now</Link>
+                      </div>
+                    </div>)
+                  })
+                }
+                {/* <div className="main-banner " style={{position:'absolute'}}>
+                  <img 
+                  className=" banner-img rounded-3" 
+                  src="https://res.cloudinary.com/dhtjmbn8s/image/upload/w_640,h_420,c_fill,g_north_west,x_0,y_0/v1682753831/pc4xv4d1bvl85t0b5yaj.jpg"
+                  alt="banner3"/>
                   <div className="main-banner-content position-absolute" style={{top:'10%',left:'6%'}}>
                     <h4>Supercharged For Pros.</h4>
                     <h5>Special Sale</h5>
@@ -52,13 +166,35 @@ const Home = () => {
                     <Link to="/" className="button">Buy Now</Link>
                   </div>
                 </div>
-            {/* </div> */}
+                <div className="main-banner" style={{position:'absolute'}}>
+                  <img 
+                  className=" banner-img rounded-3" 
+                  src="https://res.cloudinary.com/dhtjmbn8s/image/upload/w_640,h_420,c_fill,g_north_west,x_0,y_0/v1682753831/qsmjdvbagrvoq4t9i48c.jpg"
+                  alt="banner3"/>
+                  <div className="main-banner-content position-absolute" style={{top:'10%',left:'6%'}}>
+                    <h4>Supercharged For Pros.</h4>
+                    <h5>Special Sale</h5>
+                    <p>From $99 or $10/mo.</p>
+                    <Link to="/" className="button">Buy Now</Link>
+                  </div>
+                </div> */}
+                <div className="btns">
+                  {banners?.map((banner,i) => {
+                    return  <span key={i} className="dot"></span>
+                  })
+                  }
+                
+                </div>
+                
+
+              </div>
+
            
             </div>
             <div className="col-12 col-md-12 col-lg-6 ">
-              <div className="d-flex flex-wrap product-cat justify-content-between gap-2 align-items-center">
-              <div className="small-banner position-relative ">
-                <img className="img-fluid product-img rounded-3" src="/images/catbanner-03.jpg" alt="catbanner-02.jpg"/>
+              <div className="d-flex  product-cat justify-content-between gap-2 align-items-top flex-wrap">
+              <div className="small-banner position-relative  ">
+                <img className="img-fluid product-img rounded-3 w-100 d-flex justify-content-center" src="/images/catbanner-03.jpg" alt="catbanner-02.jpg"/>
                 <div className="small-banner-content position-absolute">
                   <h4>New Arrival</h4>
                   <h5>Buy IPad Air</h5>
@@ -66,7 +202,7 @@ const Home = () => {
                 </div>
               </div>
               <div className="small-banner position-relative ">
-                <img className="img-fluid product-img rounded-3" src="/images/catbanner-01.jpg" alt="catbanner-01.jpg"/>
+                <img className="img-fluid product-img rounded-3  w-100 d-flex justify-content-center" src="/images/catbanner-01.jpg" alt="catbanner-01.jpg"/>
                 <div className="small-banner-content position-absolute">
                   <h4>Best Sale</h4>
                   <h5>Laptops  Max</h5>
@@ -74,7 +210,7 @@ const Home = () => {
                 </div>
               </div>
               <div className="small-banner position-relative ">
-                <img className="img-fluid product-img rounded-3" src="/images/catbanner-02.jpg" alt="catbanner-01.jpg"/>
+                <img className="img-fluid product-img rounded-3 w-100 d-flex justify-content-center" src="/images/catbanner-02.jpg" alt="catbanner-01.jpg"/>
                 <div className="small-banner-content position-absolute">
                   <h4>Best Sale</h4>
                   <h5>Laptops  Max</h5>
@@ -82,7 +218,7 @@ const Home = () => {
                 </div>
               </div>
               <div className="small-banner position-relative ">
-                <img className="img-fluid product-img rounded-3" src="/images/catbanner-04.jpg" alt="catbanner-01.jpg"/>
+                <img className="img-fluid product-img rounded-3  w-100 d-flex justify-content-center" src="/images/catbanner-04.jpg" alt="catbanner-01.jpg"/>
                 <div className="small-banner-content position-absolute">
                   <h4>Best Sale</h4>
                   <h5>Laptops  Max</h5>
@@ -98,7 +234,7 @@ const Home = () => {
         <div className="container-xxl">
           <div className="row">
             <div className="col-12">
-              <div className="services d-flex align-items-center justify-content-between flex-wrap mt-3 flex-service-text">
+              <div className="services flex-sm-column flex-md-row gap-2 d-flex align-items-center justify-content-between flex-wrap mt-3 flex-service-text">
                 {
                   services?.map((i,j) => {
                     return (
@@ -125,62 +261,62 @@ const Home = () => {
         <div className="container-xxl">
           <div className="row">
             <div className="col-12">
-              <div className="categories d-flex jusitfy-content-between flex-wrap align-items-center">
-                <div className="d-flex  align-items-center" >
+              <div className="categories d-flex jusitfy-content-between align-items-center">
+                <div className="d-flex category-item  align-items-center" >
+                  <img className="resize-img" src="images/images/camera.jpg" alt="camera"/>
                   <div>
                     <h6 className="category-name">Cameras</h6>
                     <p className="category-items">10 Items</p>
                   </div>
-                  <img className="resize-img" src="images/images/camera.jpg" alt="camera"/>
                 </div>
-                <div className="d-flex  align-items-center" >
+                <div className="d-flex category-item align-items-center" >
+                  <img className="resize-img" src="images/images/tv.jpg" alt="smart tv"/>
                   <div>
                     <h6 className="category-name">Smart Tv</h6>
                     <p className="category-items">10 Items</p>
                   </div>
-                  <img className="resize-img" src="images/images/tv.jpg" alt="smart tv"/>
                 </div>
-                <div className="d-flex  align-items-center" >
+                <div className="d-flex category-item align-items-center" >
+                  <img className="resize-img" src="images/images/watch.jpg" alt="watch"/>
                   <div>
                     <h6 className="category-name">Smart Watches</h6>
                     <p className="category-items">10 Items</p>
                   </div>
-                  <img className="resize-img" src="images/images/watch.jpg" alt="watch"/>
                 </div>
-                <div className="d-flex  align-items-center" >
+                <div className="d-flex category-item align-items-center" >
+                  <img className="resize-img" src="images/images/headphone.jpg" alt="music & gaming"/>
                   <div>
                     <h6 className="category-name">Music & Gaming</h6>
                     <p className="category-items">10 Items</p>
                   </div>
-                  <img className="resize-img" src="images/images/headphone.jpg" alt="music & gaming"/>
                 </div>
-                <div className="d-flex  align-items-center" >
+                <div className="d-flex category-item align-items-center" >
+                  <img className="resize-img" src="images/images/camera.jpg" alt="camera"/>
                   <div>
                     <h6 className="category-name">Cameras</h6>
                     <p className="category-items">10 Items</p>
                   </div>
-                  <img className="resize-img" src="images/images/camera.jpg" alt="camera"/>
                 </div>
-                <div className="d-flex  align-items-center" >
+                <div className="d-flex category-item align-items-center" >
+                  <img className="resize-img" src="images/images/tv.jpg" alt="smart tv"/>
                   <div>
                     <h6 className="category-name">Smart Tv</h6>
                     <p className="category-items">10 Items</p>
                   </div>
-                  <img className="resize-img" src="images/images/tv.jpg" alt="smart tv"/>
                 </div>
-                <div className="d-flex  align-items-center" >
+                <div className="d-flex category-item align-items-center" >
+                  <img className="resize-img" src="images/images/watch.jpg" alt="watch"/>
                   <div>
                     <h6 className="category-name">Smart Watches</h6>
                     <p className="category-items">10 Items</p>
                   </div>
-                  <img className="resize-img" src="images/images/watch.jpg" alt="watch"/>
                 </div>
-                <div className="d-flex  align-items-center" >
+                <div className="d-flex category-item align-items-center" >
+                  <img className="resize-img" src="images/images/headphone.jpg" alt="music & gaming"/>
                   <div>
                     <h6 className="category-name">Music & Gaming</h6>
                     <p className="category-items">10 Items</p>
                   </div>
-                  <img className="resize-img" src="images/images/headphone.jpg" alt="music & gaming"/>
                 </div>
               </div>
             </div>
@@ -200,8 +336,8 @@ const Home = () => {
                       if(product?.tag?.toLowerCase() === 'featured')  {
                         foundFeatured = true;
                         return (
-                        <div key={i} className="col-sm-6 col-md-4 col-lg-3 mt-4">
-                           <ProductCard key={i} index={i}  product={product} w={100}/>
+                        <div key={i} className="product-card-container col-xs-6 col-sm-6 col-md-4 col-lg-3 mt-4">
+                           <ProductCard key={i} index={i} screenWidth={screenWidth}  product={product} w={100}/>
                         </div>
                       )
                       }
@@ -288,14 +424,15 @@ const Home = () => {
          
                  {  
                     products.length > 0 ?
-                    <div className="row">
+                    <div className="row popular-products">
                       {products?.map((product,i) => {
                         if(product.tag.toLowerCase() === 'popular') {
                             foundPopular = true;
+                            console.log(product._id)
                             return (
         
-                            <div key={i} className="col-sm-6 col-md-4 col-lg-3">
-                              <ProductCard key={i} index={i}  product={product} w={100}/>
+                            <div key={i} className="product-card-container col-sm-6 col-md-4 col-lg-3">
+                              <ProductCard key={i} index={i} screenWidth={screenWidth} product={product} w={100}/>
                             </div>
                           )
 

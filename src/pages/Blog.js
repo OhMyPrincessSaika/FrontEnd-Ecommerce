@@ -3,15 +3,18 @@ import BreadCrumb from '../components/BreadCrumb';
 import Meta from '../components/Meta';
 import BlogCard from '../components/BlogCard';
 import {useSelector,useDispatch} from 'react-redux';
-import { getAllBlogs } from '../features/blog/blogSlice';
+import { getAllBlogs, getBlogCategories } from '../features/blog/blogSlice';
 import BlogCardPlaceholder from '../components/BlogCardPlaceholder';
 const Blog = () => {
   const dispatch = useDispatch();
   React.useEffect (() => {
     dispatch(getAllBlogs());
+    dispatch(getBlogCategories());
   },[])
   const [blogs,setBlogs] = React.useState([]);
   const blogsSel = useSelector((state) => state.blog);
+  const blogCatSel = useSelector((state) => state.blog.blogCategory);
+  console.log(blogCatSel);
   React.useEffect(() => {
     if(blogsSel) {
       setBlogs(blogsSel.blogs);
@@ -29,10 +32,11 @@ const Blog = () => {
                     <h3 className="filter-title">Find By Categories</h3>
                     <div>
                       <ul className='ps-0'>
-                        <li>Watch</li>
-                        <li>TV</li>
-                        <li>Camera</li>
-                        <li>Laptop</li>
+                         {
+                           blogCatSel?.map((category) => {
+                            return <li>{category.category}</li>
+                           })
+                         }
                       </ul>
                     </div>
                   </div>
@@ -45,7 +49,7 @@ const Blog = () => {
 
                           blogs?.map((blog,i) => {
                             return (
-                              <div key={i} className="col-sm-12 col-md-6 ">
+                              <div key={i} className="col-sm-12 col-md-6 col-lg-4 ">
                                 <BlogCard blog={blog}/>
                               </div>
                             )

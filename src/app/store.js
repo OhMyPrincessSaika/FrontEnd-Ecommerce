@@ -5,6 +5,7 @@ import userReducer from '../features/user/userSlice';
 import blogReducer  from '../features/blog/blogSlice';
 import enquiryReducer from '../features/contact/contactSlice';
 import orderReducer from '../features/order/orderSlice';
+import bannerReducer from '../features/banner/bannerSlice';
 export const store = configureStore({
     reducer : {
         auth  : authReducer,
@@ -12,6 +13,7 @@ export const store = configureStore({
         user : userReducer,
         blog : blogReducer,
         enquiry : enquiryReducer,
-        order : orderReducer
+        order : orderReducer,
+        banner : bannerReducer
     }
 })

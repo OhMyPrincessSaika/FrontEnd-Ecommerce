@@ -108,22 +108,22 @@ const Orders = () => {
                   </div>
                   <div className="col-12">
                     {
-                      order.orderItems?.map((data,i) => {
+                      order?.orderItems?.map((data,i) => {
                         return (
                           <div className="row" key={i}>
                           <div className="col-3">
                             <p>
-                              {data.product.title}
+                              {data?.product?.title}
                             </p>
                         </div>
                         <div className="col-3">
                             <p>
-                              {data.quantity} 
+                              {data?.quantity} 
                             </p>
                         </div>
                         <div className='col-3'>
                             <p>
-                              $ {data.price}
+                              $ {data?.price}
                             </p>
                         </div>
                         <div className="col-3">
@@ -168,12 +168,12 @@ const Orders = () => {
                         order.orderItems?.map((productData) => {
                           return (
                             <li>
-                              <p>Product Name : <span style={{fontWeight:'bold'}} >{productData.product.title}</span></p>
-                              <p>Quantity : <span style={{fontWeight:'bold'}}>{productData.quantity}</span></p>
-                              <p>Price : <span style={{fontWeight:'bold'}}>$ {productData.price} </span></p>
+                              <p>Product Name : <span style={{fontWeight:'bold'}} >{productData?.product?.title}</span></p>
+                              <p>Quantity : <span style={{fontWeight:'bold'}}>{productData?.quantity}</span></p>
+                              <p>Price : <span style={{fontWeight:'bold'}}>$ {productData?.price} </span></p>
                               <div className="d-flex align-items-center">
                                 <p className='me-2'>Color :</p> 
-                                <p style={{backgroundColor:productData.color,width:'20px',height:'20px',borderRadius:'50%'}}></p></div>
+                                <p style={{backgroundColor:productData?.color,width:'20px',height:'20px',borderRadius:'50%'}}></p></div>
                             </li>
                           )
                         })

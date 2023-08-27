@@ -11,13 +11,13 @@ const Footer = () => {
       <footer className="py-4">
         <div className="container-xxl">
           <div className="row">
-            <div className="col-5">
+            <div className="col-lg-5 col-md-4">
               <div className="footer-top-data text-white d-flex gap-2 align-items-center">
                 <TbBrandTelegram className="fs-2"/>
                 <h5 className='mb-0'>Sign up for newsletter</h5>
               </div>
             </div>
-            <div className="col-7">
+            <div className="col-lg-7 col-md-8">
             <div className="input-group">
             <input type="text" className="form-control" placeholder="Your Email Address..." aria-label="Your Email Address..." aria-describedby="basic-addon2"/>
             <span className="input-group-text p-2" id="basic-addon2">

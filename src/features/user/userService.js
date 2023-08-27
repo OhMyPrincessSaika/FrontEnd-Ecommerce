@@ -14,8 +14,9 @@ const getUserWishList = async() => {
 }
 
 const addToCart = async(cartData) => {
+    //TODO: change url
     try {
-        const response = await axios.post(`${base_url}/product/cart/add-to-cart`,cartData,config);
+        const response = await axios.post(`http://localhost:5000/product/cart/add-to-cart`,cartData,config);
       
         return response.data;
     }catch(err) {
@@ -25,8 +26,9 @@ const addToCart = async(cartData) => {
 }
 
 const getUserCart = async() => {
+    //TODO: change url
     try {
-        const response = await axios.get(`${base_url}/product/cart/products`,config);
+        const response = await axios.get(`http://localhost:5000/product/cart/products`,config);
         return response.data;
     }catch(err) {
         console.log(err);
@@ -53,9 +55,10 @@ const emptyCart = async() => {
 
 
 const updateUserCart = async(props) => {
+    //TODO : to change url
     const {cartData,id} = props;
     try {
-        const response = await axios.patch(`${base_url}/product/cart/update-cart/${id}`,cartData,config);
+        const response = await axios.patch(`http://localhost:5000/product/cart/update-cart/${id}`,cartData,config);
         return response.data;
     }catch(err) {
         console.log(err);

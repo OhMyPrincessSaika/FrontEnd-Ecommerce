@@ -2,14 +2,14 @@ import React from 'react'
 import BreadCrumb from '../components/BreadCrumb.js';
 import Meta from '../components/Meta';
 import ProductCard from '../components/ProductCard.js';
-import ReactStars from 'react-rating-stars-component';
+import { Rating } from '@mui/material';
 import Magnifier from "react-magnifier";
 import Color from '../components/Color';
 import {MdFavoriteBorder,MdOutlineCompare} from 'react-icons/md';
 import {useLocation} from 'react-router-dom';
 import {useNavigate} from 'react-router-dom';
 import {useSelector,useDispatch} from 'react-redux';
-import { getAllProducts, getProduct, rateAProduct } from '../features/products/productSlice.js';
+import { addToWishList, getAllProducts, getProduct, rateAProduct } from '../features/products/productSlice.js';
 import { toast } from 'react-toastify';
 import { addToCart } from '../features/user/userSlice.js';
 import { useStateContext } from '../app/ContextProvider.js';
@@ -17,9 +17,12 @@ const SingleProduct = () => {
   const {user} = useStateContext();
   const [color,setColor] = React.useState('');
   const [star,setStar] = React.useState(0);
+  const {screenWidth} = useStateContext();
   const [comment,setComment] = React.useState('');
+  const [showComment,setShowComment] = React.useState(false);
   const [popularProducts,setPopularProducts] = React.useState([]);
   const [isProductInCart,setIsProductInCart] = React.useState(false);
+  const [size,setSize] = React.useState('');
   const navigate = useNavigate();
   const [quantity,setQuantity] = React.useState(1);
   const userSel = useSelector((state) => state.auth.loginUser);
@@ -27,6 +30,25 @@ const SingleProduct = () => {
   const dispatch = useDispatch();
   const [mainImg,setMainImg] = React.useState('');
   const prodId = location.pathname.split('/')[2];
+  const [grid,setGrid] = React.useState(0);
+  
+  React.useEffect(() => {
+    if(screenWidth > 1300) {
+        setGrid(4);
+    }else if(screenWidth > 762) {
+        setGrid(3);
+    }else if(screenWidth > 532) {
+        setGrid(2);
+    }else {
+        setGrid(1);
+    }
+  },[screenWidth])
+  React.useEffect(() => {
+    if(mainImg) {
+        document.querySelectorAll('.other-img').forEach((img) => img.classList.remove('active'))
+        document.querySelector(`[data-img="${mainImg}"]`).classList.add('active')
+    }
+  },[mainImg])
   React.useEffect(() => {
       dispatch(getProduct(prodId));
       dispatch(getAllProducts())
@@ -37,6 +59,7 @@ const SingleProduct = () => {
       if(singleProdSel?.images) {
           setMainImg(singleProdSel.images[0].url)
         }
+    
     },[singleProdSel])
     React.useEffect(() => {
         if(userSel?.user !== undefined) {
@@ -51,10 +74,15 @@ const SingleProduct = () => {
         console.log(e)
     }
     const handleAddToCart = () => {
-     if(color == '') {
-        toast.error('You must select color!');
+     if(color === '' && size === '') {
+        if(color === '') {
+            toast.error('You must select color!');
+         }else {
+            toast.error('You must select size!')
+         }
      }else {
-        const cartData = {color,quantity,price : singleProdSel?.price,productId : prodId}
+        const cartData = {color,quantity,price : singleProdSel?.price,productId : prodId,size}
+        alert(JSON.stringify(cartData));
         try {
             dispatch(addToCart(cartData))
             setIsProductInCart(true);
@@ -67,10 +95,7 @@ const SingleProduct = () => {
   const copyToClipBoard = (text) => {
     navigator.clipboard.writeText(text);
 }
-
-const [orderedProduct, setOrderedProduct] = React.useState(true);
 const allProdSel = useSelector((state) => state.product.products.products);
-console.log(allProdSel)
  React.useEffect(() => {
     if(allProdSel?.length > 0) {
         let data = [];
@@ -80,60 +105,12 @@ console.log(allProdSel)
         setPopularProducts(data);
     }
  },[allProdSel])
-    console.log(singleProdSel)
-//   const imageZoom = () => {
-//     let cx,cy;
-//     const img = document.getElementById('img-original');
-
-//     const result = document.getElementById('img-zoom');
-
-//     const lens = document.createElement('div');
-//     lens.setAttribute('class','img-zoom-lens');
-
-//     img.parentElement.insertBefore(lens,img);
-//     cx = result.offsetWidth / lens.offsetWidth;
-//     cy = result.offsetHeight / lens.offsetHeight;
-//     result.style.backgroundImage= `url(${img.src})`;
-//     result.style.backgroundSize = `${img.width * cx}px ${img.height*cy}px`;
-
-//     lens.addEventListener('mousemove',moveLens);
-//     img.addEventListener('mousemove',moveLens);
-
-//     lens.addEventListener('touchmove',moveLens);
-//     img.addEventListener('mousemove',moveLens);
-
-//     function moveLens(e) {
-//         var pos,x,y;
-//         pos = getCursorPos(e);
-//         x = pos.x - (lens.offsetWidth/2);
-//         y = pos.y - (lens.offsetHeight/2);
-//         if(x > img.width - lens.offsetWidth) { x = img.width - lens.offsetWidth}
-//         if( x < 0 ) { x = 0;}
-//         if( y > img.height - lens.offsetHeight) { x = img.height - lens.offsetHeight}
-//         if( y < 0 ) { y = 0;}
-//         lens.style.left = x + 'px';
-//         lens.style.top = y + 'px';
-//         result.style.backgroundPosition = "-" + (x * cx) + "px -" + (y*cy) + "px";
-//     }
-//     function getCursorPos(e) {
-//         var a,x = 0, y = 0;
-//         e = e || window.event;
-//         a = img.getBoundingClientRect();
-//         x = e.pageX - a.left;
-//         y = e.pageY - a.top;
-//         x = x - window.pageXOffset;
-//         y = y - window.pageYOffset;
-//         return ({x ,y})
-//     }
-//   } 
-//   React.useEffect(() => {
-//     imageZoom(); 
-//   },[mainImg])
+    
   const handleRating =  async(e) => {
     e.preventDefault();
-    if(comment !== '' && star !== 0) {
+    if(comment !== '' && star != 0) {
         try {
-            await dispatch(rateAProduct({comment,star,id:prodId})).unwrap();
+            await dispatch(rateAProduct({comment,  star,id:prodId})).unwrap();
             await dispatch(getProduct(prodId)).unwrap();
         }catch(err) {
             console.log(err);
@@ -144,6 +121,8 @@ console.log(allProdSel)
         toast.error('you must give rating')
     }
   }
+  console.log(singleProdSel?.totalRating)
+  
   return (
     <>
         <BreadCrumb title={singleProdSel?.title}/>
@@ -151,14 +130,15 @@ console.log(allProdSel)
         <div className="main-product-wrapper py-5 home-wrapper-2">
             <div className="container-xxl p-3">
                 <div className='row '>
-                    <div className="col-lg-7 col-md-12 d-flex mt-0 bg-white">
+                    <div className="col-lg-7 col-md-12 product-container d-flex mt-0 bg-white">
                         <div className="other-product-images d-flex flex-column gap-2">
                             {
                                 singleProdSel?.images?.map((image,i) => {
                                    return ( 
                                    <div key={i}
-                                   className=" w-100 d-flex justify-content-center align-items-center" 
-                                   style={{width:'100%',padding:'5px',border:'1px solid #febd69',borderRadius:'5px'}}>
+                                   data-img ={image.url}
+                                   className=" w-100 other-img d-flex justify-content-center align-items-center" 
+                                   style={{width:'100%',padding:'5px',borderRadius:'5px'}}>
                                         
                                         <img 
                                         data-url= {image.url}
@@ -200,17 +180,16 @@ console.log(allProdSel)
                                 </h3>
                             </div>
                             <div className="border-bottom py-3">
-                                <p className="price">$ 100</p>
+                                <p className="price">$ {singleProdSel?.price}</p>
                                 <div className="d-flex align-items-center gap-1">
-                                <ReactStars
-                                        count={5}
-                                        onChange={ratingChanged}
-                                        size={24}
-                                        value={singleProdSel?.totalRating}
-                                        edit={false}
-                                        activeColor="#ffd700"
+                                <Rating
+                                        name="read-only"
+                                        precision={0.5}
+                                        readOnly
+                                        value={singleProdSel?.totalRating ? Number(singleProdSel?.totalRating) : 0}
+                                     
                                         />
-                                <p className="mb-0 t-review">({singleProdSel?.rating?.length > 0 ? singleProdSel?.rating?.length + ' review(s)' : 0 + ' review'} )</p>
+                                <p className="mb-0 t-review">({singleProdSel?.ratings?.length > 0 ? singleProdSel?.ratings?.length > 1 ? `${singleProdSel?.ratings?.length} reviews` : '1 review' : 0 + ' review'} )</p>
                                 </div>
                                 <a className="review-btn" href="#review">Write a review</a>
                             </div>
@@ -233,10 +212,24 @@ console.log(allProdSel)
                                 <div className="d-flex gap-1 flex-column mt-2 mb-3">
                                     <h3 className="product-heading my-2">Size: </h3> 
                                     <div className="d-flex flex-wrap gap-1">
-                                        <span className="badge border border-1 bg-white text-dark">S</span>
-                                        <span className="badge border border-1 bg-white text-dark">M</span>
+                                        {
+                                            singleProdSel?.size?.split(",")?.map((value,i) => {
+                                                return <span 
+                                                key={i}
+                                                data-value={value}
+                                                style={{cursor:'pointer'}}
+                                                onClick={() => {
+                                                    document.querySelectorAll('.size').forEach((size) =>  size.classList.remove('active'));
+                                                    document.querySelector(`[data-value = ${value}]`).classList.add('active');
+                                                    setSize(value);
+                                                }}
+                                                className="badge size  border border-1 bg-white text-dark">{value}</span>
+                                            })
+                                        }
+                                        
+                                        {/* <span className="badge border border-1 bg-white text-dark">M</span>
                                         <span className="badge border border-1 bg-white text-dark">XL</span>
-                                        <span className="badge border border-1 bg-white text-dark">XXL</span>
+                                        <span className="badge border border-1 bg-white text-dark">XXL</span> */}
                                     </div>
                                 </div>
                                 <div className="d-flex gap-1 flex-column mt-2 mb-3">
@@ -262,6 +255,7 @@ console.log(allProdSel)
                                             }else {
                                                 if(user !== '') {
                                                     handleAddToCart();
+                                                    
                                                 }else {
                                                     navigate('/login')
                                                 }
@@ -270,19 +264,40 @@ console.log(allProdSel)
                                         >
                                             {isProductInCart ? 'Go' : 'Add'} to Cart
                                         </button>
-                                        <button className="button border-0 signup" type="submit">
+                                        <button 
+                                        onClick={() => {
+                                            if(isProductInCart) {
+                                                navigate('/checkout');
+                                            }else {
+                                                if(user !== '') {
+                                                    handleAddToCart();
+                                                    navigate('/checkout')
+                                                }else {
+                                                    navigate('/login');
+                                                }
+                                            }
+                                           
+                                        }}
+                                        className="button border-0 signup"
+                                        >
                                             Buy Now
                                         </button>
                                     </div>
                                 </div>
                                 <div className="d-flex align-items-center gap-2">
-                                    <div>
+                                    {/* <div>
                                         <a href="">
                                             <MdOutlineCompare className="fs-5 me-2"/> Add to Compare</a>
-                                    </div>
+                                    </div> */}
                                     <div>
-                                        <a href="" >
-                                            <MdFavoriteBorder className="fs-5 me-2"/> Add to Wishlist</a>
+                                        <button 
+                                        className="bg-transparent border-0 rounded p-3"
+                                        
+                                        onClick={() => {
+                                            dispatch(addToWishList(prodId));
+                                        }} >
+                                            <MdFavoriteBorder className="fs-5 me-2"/> Add to Wishlist
+                                        </button>
                                     </div>
                                 </div>
                                 <div className="d-flex flex-column gap-1">
@@ -312,8 +327,8 @@ console.log(allProdSel)
             <div className="container-xxl">
                 <div className="row">
                     <div className='col-12'>
-                        <h3 className="mb-3">Description</h3>
-                        <div className="bg-white p-3">
+                        <div className="bg-white p-4">
+                             <h3 className="mb-3">Description</h3>
                             <p dangerouslySetInnerHTML={{__html : singleProdSel?.description}}>
                                
                             </p>
@@ -326,69 +341,84 @@ console.log(allProdSel)
             <div className="container-xxl">
                 <div className="row">
                     <div className="col-12">
-                        <h3>Reviews</h3>
+                      
                         <div className="review-inner-wrapper">
+                        <h3>Reviews</h3>
                             <div className="review-head d-flex justify-content-between align-items-end">
                                 <div>
-                                    <h4>Customer Reviews</h4>
+                                  
                                     <div className="d-flex gap-1 align-items-center">
-                                        <ReactStars
-                                        count={5}
-                                        onChange={ratingChanged}
-                                        size={24}
-                                        value={singleProdSel?.totalRating}
-                                        edit={false}
-                                        activeColor="#ffd700"
+                                        <Rating
+                                        precision={0.5}
+                                        readOnly
+                                        value={singleProdSel?.totalRating ? Number(singleProdSel?.totalRating) : 0}
+                                        name="read-only"
                                         />
                                         <p className="mb-0">Based on {singleProdSel?.ratings?.length > 0 ? singleProdSel?.ratings?.length + `${singleProdSel?.ratings?.length > 1 ? ' reviews' : ' review'}` : 0 + ' review'} </p>
                                     </div>
                                 </div>
                                 <div>
                                 {
-                                    orderedProduct
+                                    showComment=== false
                                     &&
-                                    <a className="text-dark text-decoration-underline" href="">Write A Review</a>
+                                    <button 
+                                    onClick={() => {
+                                        let user = JSON.parse(localStorage.getItem('customer'))?.user;
+                                        if(user !== undefined) {
+                                            setShowComment((prev) =>  !prev) 
+                                        }else {
+                                            navigate('/login');
+                                        }
+
+                                        }
+                                    }
+                                    className="text-dark text-decoration-underline bg-transparent border-0">Write A Review</button>
                                 }
                                 </div>
                             </div>
-                            <div className="review-form py-4">
-                        <form action="" onSubmit={handleRating} className="d-flex gap-2 flex-column">
-                            <h4>Review</h4>
-                            <div className='d-flex align-items-center  gap-2'>
-                                    <p className="mb-0">Rate this product:</p>
-                                    <ReactStars
-                                        count={5}
-                                        onChange={(e) => setStar(e)}
-                                        size={25}
-                                        value={star}
-                                        edit={true}
-                                        activeColor="#ffd700"
-                                    />
-                            </div>
-                            <div>
-                                <textarea name="comment" id="" cols="30" rows="10" className="w-100 form-control"
-                                placeholder="Enter your comment here..."
-                                onChange={(e) => setComment(e.target.value)}
-                                >
-                                </textarea>
-                            </div>
-                            <div className="d-flex justify-content-end">
-                                <button className="button border-0 mt-2" type='submit'>Submit</button>
-                            </div>
-                        </form>
-                            </div>
+                           {showComment && <div className="review-form py-4">
+                                <form action="" onSubmit={handleRating} className="d-flex gap-2 flex-column">
+                                    <h4>Review</h4>
+                                    <div className='d-flex align-items-center  gap-2'>
+                                            <p className="mb-0">Rate this product:</p>
+                                            <Rating
+                                                
+                                                onChange={(e,newValue) => setStar(newValue)}
+                                                precision={0.5}
+                                                value={star}
+                                                name="simple-controlled"
+                                            />
+                                    </div>
+                                    <div>
+                                        <textarea name="comment" id="" cols="30" rows="10" className="w-100 form-control"
+                                        placeholder="Enter your comment here..."
+                                        onChange={(e) => setComment(e.target.value)}
+                                        >
+                                        </textarea>
+                                    </div>
+                                    <div className="d-flex justify-content-end">
+                                        <button className="border-0 mt-2 px-4 mx-2" 
+                                        style={{borderRadius:'15px'}}
+                                        onClick={() => setShowComment((prev) => !prev)}
+                                        type="button">Cancel</button>
+                                        <button className="button border-0 mt-2" 
+                                        // onClick={() => setShowComment(false)}
+                                        type='submit'>Submit</button>
+                                    </div>
+                                </form>
+                            </div>}
                             <div className="reviews mt-4">
                                {singleProdSel?.ratings?.map((rating,index) => {
-                                return (  <div className="review border-1 border border-warning p-3" key={index}>
+                                return (  <div className="review p-3 m-3" key={index}
+                                style={{backgroundColor:'#f5f5f5'}}
+                                >
                                 <div className="d-flex gap-1 align-items-center">
-                                <h4 className="mb-0"></h4>
-                                <ReactStars
-                                        count={5}
-                                        onChange={ratingChanged}
-                                        size={24}
+                                <h4 className="mb-0">{rating.postedBy.firstname} {rating.postedBy.lastname}</h4>
+                                <Rating
+                                        name="read-only"
                                         value={rating?.star}
-                                        edit={false}
-                                        activeColor="#ffd700"
+                                        precision={0.5}
+                                        readOnly
                                 />
                                 </div>
                                 <p className="mt-3">
@@ -410,11 +440,17 @@ console.log(allProdSel)
                             <div className="col-12">
                                 <h3 className="section-heading">Popular Products</h3>
                             </div>
-                            <div className="d-flex align-items-center gap-2">
+                            <div 
+                            // style={{display:'grid',gridTemplateColumns:`repeat(${grid},1fr);`}}
+                            className="d-flex justify-content-equally gap-3  w-100">
                                 {
                                     popularProducts?.map((product,i) => {
-                                       return (<div key={i}>
-                                            <ProductCard product={product}/>
+                                       if(product._id === prodId) {
+                                            return;
+                                       }
+                                       return (
+                                        <div key={i} style={{width:'300px'}}>
+                                            <ProductCard product={product} w={100}/>
                                         </div>)
                                     })
                                 }

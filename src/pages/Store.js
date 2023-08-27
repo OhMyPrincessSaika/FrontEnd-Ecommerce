@@ -340,9 +340,9 @@ const Store = () => {
                       {
                         products.length > 0 
                         ?
-                        products?.map((product) => {
+                        products?.map((product,key) => {
                           return (
-                          <div>
+                          <div key={key}>
                             <ProductCard grid={grid} screenWidth={screenWidth} product={product} isStore={true} />
                           </div>) 
                         })

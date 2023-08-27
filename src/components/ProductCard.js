@@ -74,16 +74,18 @@ const ProductCard = (props) => {
       {isLoading &&
         <ProductPlaceholder/>
       }
-      <div key={props.index} style={{display:isLoading ? 'none' : 'block'}} className={`m-1   w-${props.w}`}>
+      <div key={props.index} style={{display:isLoading ? 'none' : 'block'}} className={`m-1 product-card  w-${props.w}`}>
           
-          <div  className="product-card position-relative" style={{padding:props.screenWidth < 532 ? '10px':'15px'}}>
+          <div  className="product-card position-relative" style={{padding:props.screenWidth < 532 ? '3px':'15px'}}>
               <div className="wishlist-icon position-absolute">
                
               </div>
               <Link to={`/product/${product?._id}`}>
                 <div className="product-img">
                     {product?.images?.map((image,i) => {
-                    const newUrl = `https://res.cloudinary.com/dhtjmbn8s/image/upload/w_${props.screenWidth < 532 ? '280' : '700'},h_${props.screenWidth < 532 ? '320' : '800'},c_fill/v1682753831/${image.public_id}.jpg`
+                    const str = "c_crop,g_custom";
+
+                    const newUrl = image.url.replace(/(upload\/)/,"$1"+str+"/");
                     return <LazyImage
                     id={`image${i}`} 
                     key={i}
